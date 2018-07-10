@@ -1,0 +1,64 @@
+#include<stdio.h>
+#include<string.h> 
+#include<stdlib.h> 
+#include<arpa/inet.h>
+#include<sys/socket.h>
+
+#define BUFFLEN 1024
+#define PORT 10333
+
+void main()
+{
+	
+	struct sockaddr_in clientAddr;
+	int sockfd, clientLen, i=0;
+	char string[BUFFLEN];
+
+	/*Create Client socket*/
+	if((sockfd=socket(AF_INET, SOCK_DGRAM, 0)) == -1)
+	{
+		perror("socket failed:");
+		exit(0);
+	}
+
+	/* Clear Client structure */
+	memset((char *)&clientAddr, 0, sizeof(clientAddr));
+
+	clientAddr.sin_family		= AF_INET;			    //For IPV4 internet protocol
+	clientAddr.sin_port		= htons(PORT);			    //Assign port number on which server listening	
+	clientAddr.sin_addr.s_addr	= inet_addr("95.9.42.4");           //htonl(INADDR_ANY);	            //Assign server machine address
+	
+	clientLen = sizeof(clientAddr);
+
+	/* Send data to server */
+	while(1) 
+	{
+		printf("Enter any string\n");
+		scanf("%s",string);
+
+		/* Send string/data to server */
+		if(sendto(sockfd, string, BUFFLEN, 0, (struct sockaddr *)&clientAddr, clientLen) == -1)
+		{
+			perror("sendto failed:");
+			exit(1);
+		}
+
+
+		memset(string, '\0', BUFFLEN);
+
+		if(recvfrom(sockfd, string, BUFFLEN, 0, (struct sockaddr *)&clientAddr, &clientLen) == -1)
+		{
+			perror("recvfrom failed");
+			exit(1);
+		}
+
+		printf("Echo response from server: %s\n",string);
+
+		//if(string == "exit")break;
+		
+		
+	}
+
+	close(sockfd);
+
+}
